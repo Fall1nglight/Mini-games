@@ -1,6 +1,6 @@
-﻿using Blackjack.Enums;
+﻿using BlackjackSinglePlayer.Enums;
 
-namespace Blackjack;
+namespace BlackjackSinglePlayer;
 
 public class Dealer
 {

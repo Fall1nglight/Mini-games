@@ -1,4 +1,4 @@
-﻿namespace Blackjack;
+﻿namespace BlackjackSinglePlayer;
 
 internal class Program
 {

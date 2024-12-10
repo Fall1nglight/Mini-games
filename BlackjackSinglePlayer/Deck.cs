@@ -1,6 +1,6 @@
-﻿using Blackjack.Enums;
+﻿using BlackjackSinglePlayer.Enums;
 
-namespace Blackjack;
+namespace BlackjackSinglePlayer;
 
 public class Deck
 {
@@ -50,6 +50,12 @@ public class Deck
     /// <returns>The drawn card.</returns>
     public Card Draw()
     {
+        if (_cards.Count == 0)
+        {
+            Fill();
+            Shuffle();
+        }
+
         Card drawnCard = _cards[0];
         _cards.RemoveAt(0);
         return drawnCard;

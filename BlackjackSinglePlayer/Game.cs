@@ -1,4 +1,4 @@
-﻿namespace Blackjack;
+﻿namespace BlackjackSinglePlayer;
 
 public class Game
 {
@@ -24,8 +24,6 @@ public class Game
 
     private void ShowRules()
     {
-        Console.WriteLine("=== Welcome to the game ===");
-        Console.WriteLine();
         Console.WriteLine("=== [Rules] ===");
         Console.WriteLine("Hit: Draw a card from the deck.");
         Console.WriteLine("Stand: Keep your current total and end your turn.");
@@ -166,18 +164,97 @@ public class Game
         } while (choice != 's' && !_player.IsBusted);
     }
 
-    public void Run()
+    private void InitMenu()
     {
-        AddPlayer();
-        ShowRules();
-        DealCards();
-        PlayerTurn();
+        // todo: nested menus should only return to the previus menu
+        Menu mainMenu = new Menu("Main Menu");
+        MenuItem rulesItem = new MenuItem(1, "Show rules");
+        MenuItem playersItem = new MenuItem(2, "Player actions (view/add/edit/remove)");
+        MenuItem startItem = new MenuItem(3, "Start game");
+        MenuItem statisticsItem = new MenuItem(4, "Show statistics");
+        MenuItem exitItem = new MenuItem(5, "Quit");
 
-        if (!_player.IsBusted)
-            DealerTurn();
+        mainMenu.SetItems(
+            new List<MenuItem>() { rulesItem, playersItem, startItem, statisticsItem, exitItem }
+        );
 
-        DeterminateWinner();
+        int choice = mainMenu.GetChoosenItem();
+
+        if (choice != 5)
+            Console.Clear();
+
+        switch (choice)
+        {
+            case 1:
+            {
+                ShowRules();
+                break;
+            }
+
+            case 2:
+            {
+                Menu playerMenu = new Menu("Player menu");
+                MenuItem viewPlayerItem = new MenuItem(1, "View players");
+                MenuItem addPlayerItem = new MenuItem(2, "Add player");
+                MenuItem editPlayer = new MenuItem(3, "Edit player");
+                MenuItem deletePlayer = new MenuItem(4, "Delete player");
+
+                playerMenu.SetItems(
+                    new List<MenuItem>() { viewPlayerItem, addPlayerItem, editPlayer, deletePlayer }
+                );
+
+                int playerMenuChoice = playerMenu.GetChoosenItem();
+
+                Console.WriteLine();
+
+                // playerMenuSwitch
+                switch (playerMenuChoice)
+                {
+                    // view players
+                    case 1:
+                    {
+                        Console.WriteLine("Players stored locally");
+
+                        break;
+                    }
+
+                    // add players
+                    case 2:
+                    {
+                        Console.Write("Please enter your username: ");
+                        string username = Console.ReadLine()!;
+
+                        break;
+                    }
+                }
+                // playerMenuSwitch
+                break;
+            }
+
+            case 5:
+            {
+                return;
+            }
+        }
 
         Console.ReadLine();
+        InitMenu();
+    }
+
+    public void Run()
+    {
+        InitMenu();
+
+        // AddPlayer();
+        // ShowRules();
+        // DealCards();
+        // PlayerTurn();
+        //
+        // if (!_player.IsBusted)
+        //     DealerTurn();
+        //
+        // DeterminateWinner();
+        //
+        // Console.ReadLine();
     }
 }

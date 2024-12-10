@@ -1,4 +1,4 @@
-﻿namespace Blackjack.Enums;
+﻿namespace BlackjackSinglePlayer.Enums;
 
 public enum CardRank
 {
