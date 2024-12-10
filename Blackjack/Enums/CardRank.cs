@@ -14,7 +14,7 @@ public enum CardRank
     Jack = 10,
     Queen = 10,
     King = 10,
-    Ace =
-        11 // Ace could be 1 as well, depends on the player's hand
-    ,
+
+    // Ace could be 1 as well, depends on the player's hand
+    Ace = 11,
 }
