@@ -3,106 +3,181 @@
 public class Game
 {
     // fields
-    private Deck _deck;
-    private List<Player> _players;
-    private Dealer _dealer;
+    private readonly Deck _deck;
+    private Player _player;
+    private readonly Dealer _dealer;
 
     // constructors
     public Game()
     {
         _deck = new Deck();
-        _players = new List<Player>();
         _dealer = new Dealer();
     }
 
-    private void AddPlayers()
+    // methods
+    private void AddPlayer()
     {
         Console.Write("Please enter your name: ");
         string playerName = Console.ReadLine()!;
-        _players.Add(new Player(playerName));
-
-        Console.WriteLine();
-    }
-
-    private void WelcomePlayers()
-    {
-        Console.WriteLine("=== Welcome to the game ===");
-        Console.WriteLine();
-        Console.WriteLine("=== [Players] ===");
-
-        int idx = 0;
-
-        while (idx < _players.Count)
-        {
-            Console.WriteLine($"{idx + 1}. {_players[idx].Name}");
-            idx++;
-        }
-
-        Console.WriteLine($"{idx + 1}. Dealer (BOT)");
-        Console.WriteLine();
+        _player = new Player(playerName);
     }
 
     private void ShowRules()
     {
+        Console.WriteLine("=== Welcome to the game ===");
+        Console.WriteLine();
         Console.WriteLine("=== [Rules] ===");
         Console.WriteLine("Hit: Draw a card from the deck.");
         Console.WriteLine("Stand: Keep your current total and end your turn.");
         Console.WriteLine();
+        Console.WriteLine("At the start of the game, you draw 2 cards.");
         Console.WriteLine(
-            "Every player (including the dealer) draws at least 2 cards at the start of the game."
+            "The dealer also draws 2 cards but reveals only one of them, while the other remains hidden."
         );
         Console.WriteLine(
-            "The dealer reveals only one of their cards, while the other remains hidden."
+            "You can decide whether to Hit (draw more cards) or Stand (keep your current hand)."
         );
         Console.WriteLine(
-            "Players then take turns deciding whether to Hit (draw more cards) or Stand (keep their current hand)."
+            "If you choose to Hit, you draw a card from the deck. You can Hit multiple times."
         );
-        Console.WriteLine(
-            "If a player chooses to Hit, they draw a card from the deck. Multiple hits are allowed."
-        );
-        Console.WriteLine(
-            "If the player chooses to Stand, their turn ends, and the game moves to the next player or phase."
-        );
+        Console.WriteLine("If you choose to Stand, your turn ends, and the dealer plays.");
         Console.WriteLine(
             "The dealer must continue Hitting until their total score is at least 17."
         );
         Console.WriteLine(
-            "If a player or the dealer exceeds 21 points, they bust and lose the round."
+            "If you or the dealer exceed 21 points, it’s a bust, and you lose the round."
         );
         Console.WriteLine("The goal is to get as close to 21 as possible without going over.");
-        Console.WriteLine(
-            "If the player's total is closer to 21 than the dealer's, the player wins."
-        );
+        Console.WriteLine("If your total is closer to 21 than the dealer's, you win!");
         Console.WriteLine("If the dealer's total is closer to 21, the dealer wins.");
         Console.WriteLine(
-            "In case of a tie (both have the same total score), it's a push, and the bet is returned."
+            "In case of a tie (both have the same total score), it’s a push, and your bet is returned."
         );
         Console.WriteLine();
         Console.WriteLine("Good luck and have fun!");
     }
 
-    private void DealInitCards()
+    private void DealCards()
     {
-        foreach (Player player in _players)
-        {
-            player.DrawCard(_deck);
-        }
+        DealCardsPerRound();
+        DealCardsPerRound();
+    }
 
+    private void DealCardsPerRound()
+    {
+        _player.DrawCard(_deck);
         _dealer.DrawCard(_deck);
+    }
 
-        foreach (Player player in _players)
+    private void DisplayPlayerHand(Player player)
+    {
+        Console.WriteLine($"{player.Name}, you have the following cards");
+        Console.WriteLine($"{string.Join(", ", player.Hand)}");
+        Console.WriteLine($"Your score is: {player.Score}");
+        Console.WriteLine();
+    }
+
+    private void DisplayDealerHand()
+    {
+        Console.WriteLine("The dealer has the following cards");
+        Console.WriteLine($"{_dealer.Hand[0]}, ???");
+        Console.WriteLine();
+    }
+
+    private void DealerTurn()
+    {
+        Console.WriteLine();
+        Console.Write("Now the dealer draws");
+
+        for (int i = 0; i < 10; i++)
         {
-            player.DrawCard(_deck);
+            Console.Write('.');
+            Thread.Sleep(300);
         }
+
+        while (_dealer.Score < 17)
+        {
+            _dealer.DrawCard(_deck);
+        }
+
+        Console.WriteLine($"\nDealer's cards: {string.Join(", ", _dealer.Hand)}");
+    }
+
+    private void DeterminateWinner()
+    {
+        Console.WriteLine($"\nYour score: {_player.Score}");
+        Console.WriteLine($"Dealer score: {_dealer.Score}");
+
+        if (_player.IsBusted)
+        {
+            Console.WriteLine("You are busted! You lost!");
+            return;
+        }
+
+        if (_dealer.IsBusted)
+        {
+            Console.WriteLine("The dealer is busted! You won!");
+            return;
+        }
+
+        if (_player.Score == _dealer.Score)
+        {
+            Console.WriteLine("Both scores are equal. Push!");
+            return;
+        }
+
+        Console.WriteLine(_player.Score > _dealer.Score ? "You won!" : "You lost!");
+    }
+
+    private void PlayerTurn()
+    {
+        Console.ReadLine();
+
+        if (_player.HasBlackjack)
+        {
+            Console.WriteLine("You got blackjack!");
+            return;
+        }
+
+        char choice;
+        do
+        {
+            Console.Clear();
+            DisplayPlayerHand(_player);
+            DisplayDealerHand();
+
+            Console.Write("Would you like to hit or stand? [h / s]: ");
+            choice = Console.ReadKey().KeyChar;
+
+            if (choice == 's')
+                break;
+
+            if (choice != 'h')
+            {
+                Console.WriteLine("You have entered wrong input! Try again!");
+                continue;
+            }
+
+            _player.DrawCard(_deck);
+
+            Console.WriteLine($"\n\nYou have drawn the following card: {_player.Hand[^1]}");
+
+            Thread.Sleep(1500);
+        } while (choice != 's' && !_player.IsBusted);
     }
 
     public void Run()
     {
-        AddPlayers();
-        WelcomePlayers();
+        AddPlayer();
         ShowRules();
-        DealInitCards();
-    }
+        DealCards();
+        PlayerTurn();
 
-    // methods
+        if (!_player.IsBusted)
+            DealerTurn();
+
+        DeterminateWinner();
+
+        Console.ReadLine();
+    }
 }

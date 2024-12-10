@@ -5,7 +5,7 @@ namespace Blackjack;
 public class Dealer
 {
     // fields
-    private List<Card> _hand;
+    private readonly List<Card> _hand;
     private int _score;
 
     // constructors
@@ -18,6 +18,7 @@ public class Dealer
     public void DrawCard(Deck deck)
     {
         _hand.Add(deck.Draw());
+        CalculateScore();
     }
 
     private void CalculateScore()
@@ -32,5 +33,9 @@ public class Dealer
     }
 
     // properties
+    public bool IsBusted => _score > 21;
+
     public int Score => _score;
+
+    public List<Card> Hand => _hand;
 }

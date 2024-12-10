@@ -5,16 +5,20 @@ namespace Blackjack;
 public class Card
 {
     // fields
-    private CardSuit _suit;
-    private CardRank _rank;
+    private readonly CardSuit _suit;
+    private readonly CardRank _rank;
 
     // constructors
-    public Card(CardSuit suit, CardRank rank) { }
+    public Card(CardSuit suit, CardRank rank)
+    {
+        _suit = suit;
+        _rank = rank;
+    }
 
     // methods
     public override string ToString()
     {
-        return $"{_suit} {_rank}, value: {Value}";
+        return $"{_suit} {_rank}";
     }
 
     // properties

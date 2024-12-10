@@ -5,14 +5,15 @@ namespace Blackjack;
 public class Player
 {
     // fields
-    private string _name;
-    private List<Card> _hand;
+    private readonly string _name;
+    private readonly List<Card> _hand;
     private int _score;
 
     // constructors
     public Player(string name)
     {
         _name = name;
+        _hand = new List<Card>();
     }
 
     // methods
@@ -43,5 +44,11 @@ public class Player
     // properties
     public int Score => _score;
 
+    public bool IsBusted => _score > 21;
+
+    public bool HasBlackjack => _score == 21;
+
     public string Name => _name;
+
+    public List<Card> Hand => _hand;
 }
