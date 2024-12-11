@@ -42,10 +42,30 @@ public class Database
     public void AddPlayer(Player player)
     {
         _storedPlayers.Add(player);
+        SyncToJson();
+        Console.WriteLine($"{_storedPlayers[^1].Name} has been added to the database.");
+    }
+
+    public void RemovePlayer(int playerId)
+    {
+        Player toRemove = _storedPlayers[playerId];
+        _storedPlayers.RemoveAt(playerId);
+        SyncToJson();
+        Console.WriteLine($"{toRemove.Name} has been removed from the database.");
+    }
+
+    public void EditPlayer(int playerId, Player player)
+    {
+        _storedPlayers[playerId] = player;
+        SyncToJson();
+        Console.WriteLine($"Player with id: {playerId} has been edited.");
+    }
+
+    public void SyncToJson()
+    {
         DatabaseRecord dbRecord = new DatabaseRecord(_storedPlayers);
         string jsonString = JsonSerializer.Serialize(dbRecord, _options);
         File.WriteAllText(_path, jsonString);
-        Console.WriteLine($"{_storedPlayers[^1].Name} has been added to the database.");
     }
 
     public void LoadFromJson()

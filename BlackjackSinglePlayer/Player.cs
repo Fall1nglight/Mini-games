@@ -5,7 +5,7 @@ namespace BlackjackSinglePlayer;
 public class Player
 {
     // fields
-    private readonly string _name;
+    private string _name;
     private readonly List<Card> _hand;
     private int _score;
     private int _balance;
@@ -50,9 +50,17 @@ public class Player
 
     public bool HasBlackjack => _score == 21;
 
-    public string Name => _name;
+    public string Name
+    {
+        get => _name;
+        set => _name = value ?? throw new ArgumentNullException(nameof(value));
+    }
 
     public List<Card> Hand => _hand;
 
-    public int Balance => _balance;
+    public int Balance
+    {
+        get => _balance;
+        set => _balance = value;
+    }
 }

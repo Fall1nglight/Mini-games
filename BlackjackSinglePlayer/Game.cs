@@ -1,6 +1,4 @@
-﻿using System.Text.Json;
-
-namespace BlackjackSinglePlayer;
+﻿namespace BlackjackSinglePlayer;
 
 public class Game
 {
@@ -198,15 +196,20 @@ public class Game
             case 2:
             {
                 Menu playerMenu = new Menu("Player menu");
-                MenuItem viewPlayerItem = new MenuItem(1, "View players");
                 MenuItem addPlayerItem = new MenuItem(2, "Add player");
-                MenuItem editPlayer = new MenuItem(3, "Edit player");
-                MenuItem deletePlayer = new MenuItem(4, "Delete player");
+                List<MenuItem> playerMenuItems = new List<MenuItem>() { addPlayerItem };
 
-                playerMenu.SetItems(
-                    new List<MenuItem>() { viewPlayerItem, addPlayerItem, editPlayer, deletePlayer }
-                );
+                if (_database.HasPlayers)
+                {
+                    MenuItem viewPlayerItem = new MenuItem(1, "View players");
+                    MenuItem editPlayer = new MenuItem(3, "Edit player");
+                    MenuItem deletePlayer = new MenuItem(4, "Delete player");
+                    playerMenuItems.Add(viewPlayerItem);
+                    playerMenuItems.Add(editPlayer);
+                    playerMenuItems.Add(deletePlayer);
+                }
 
+                playerMenu.SetItems(playerMenuItems);
                 int playerMenuChoice = playerMenu.GetChoosenItem();
 
                 Console.WriteLine();
@@ -217,12 +220,6 @@ public class Game
                     // view players
                     case 1:
                     {
-                        if (!_database.HasPlayers)
-                        {
-                            Console.WriteLine("There are no players stored locally.");
-                            break;
-                        }
-
                         Console.WriteLine("Players stored locally");
                         foreach (Player player in _database.Players)
                         {
@@ -245,12 +242,71 @@ public class Game
                     // edit player
                     case 3:
                     {
+                        Menu editPlayerMenu = new Menu("Edit Player");
+                        List<MenuItem> editPlayerItems = new List<MenuItem>();
+
+                        for (var i = 0; i < _database.Players.Count; i++)
+                        {
+                            editPlayerItems.Add(new MenuItem(i, $"{_database.Players[i].Name}"));
+                        }
+
+                        editPlayerMenu.SetItems(editPlayerItems);
+                        int editPlayerChoice = editPlayerMenu.GetChoosenItem();
+
+                        Player playerToEdit = _database.Players[editPlayerChoice];
+
+                        Menu editPlayerDetailsMenu = new Menu(playerToEdit.Name);
+                        MenuItem nameItem = new MenuItem(1, "Change name");
+                        MenuItem balanceItem = new MenuItem(
+                            2,
+                            $"Balance (current: {playerToEdit.Balance})"
+                        );
+
+                        editPlayerDetailsMenu.SetItems(
+                            new List<MenuItem>() { nameItem, balanceItem }
+                        );
+
+                        int editPlayerDetailsChoice = editPlayerDetailsMenu.GetChoosenItem();
+
+                        switch (editPlayerDetailsChoice)
+                        {
+                            case 1:
+                            {
+                                Console.Write("Enter a new username: ");
+                                string newUsername = Console.ReadLine()!;
+                                playerToEdit.Name = newUsername;
+                                break;
+                            }
+
+                            case 2:
+                            {
+                                Console.Write("Enter new balance: ");
+                                int newBalance = int.Parse(Console.ReadLine()!);
+                                playerToEdit.Balance = newBalance;
+                                break;
+                            }
+                        }
+
+                        _database.EditPlayer(editPlayerChoice, playerToEdit);
+
                         break;
                     }
 
                     // delete player
                     case 4:
                     {
+                        Menu deletePlayerMenu = new Menu("Delete player");
+                        List<MenuItem> deletePlayerItems = new List<MenuItem>();
+
+                        for (var i = 0; i < _database.Players.Count; i++)
+                        {
+                            deletePlayerItems.Add(new MenuItem(i, _database.Players[i].Name));
+                        }
+
+                        deletePlayerMenu.SetItems(deletePlayerItems);
+                        int deletePlayerChoice = deletePlayerMenu.GetChoosenItem();
+                        _database.RemovePlayer(deletePlayerChoice);
+
                         break;
                     }
                 }
