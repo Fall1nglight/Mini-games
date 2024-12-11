@@ -36,7 +36,7 @@ public class Player
     /// </summary>
     private void CalculateScore()
     {
-        if (_score > 11 && _hand[^1].Rank == CardRank.Ace)
+        if (_score >= 11 && _hand[^1].Rank == CardRank.Ace)
         {
             _score += 1;
             return;
