@@ -32,6 +32,12 @@ public class Dealer
         _score += _hand[^1].Value;
     }
 
+    public void Reset()
+    {
+        _hand.Clear();
+        _score = 0;
+    }
+
     // properties
     public bool IsBusted => _score > 21;
 

@@ -61,14 +61,25 @@ public class Database
         Console.WriteLine($"Player with id: {playerId} has been edited.");
     }
 
-    public void SyncToJson()
+    public void EditPlayer(Player player)
+    {
+        int idx = 0;
+
+        while (idx < _storedPlayers.Count && _storedPlayers[idx].Id != player.Id)
+            idx++;
+
+        _storedPlayers[idx] = player;
+        SyncToJson();
+    }
+
+    private void SyncToJson()
     {
         DatabaseRecord dbRecord = new DatabaseRecord(_storedPlayers);
         string jsonString = JsonSerializer.Serialize(dbRecord, _options);
         File.WriteAllText(_path, jsonString);
     }
 
-    public void LoadFromJson()
+    private void LoadFromJson()
     {
         string jsonString = File.ReadAllText(_path);
         DatabaseRecord? dbRecord = null;

@@ -5,6 +5,7 @@ namespace BlackjackSinglePlayer;
 public class Player
 {
     // fields
+    private readonly Guid _id;
     private string _name;
     private readonly List<Card> _hand;
     private int _score;
@@ -13,6 +14,7 @@ public class Player
     // constructors
     public Player(string name)
     {
+        _id = Guid.NewGuid();
         _name = name;
         _hand = new List<Card>();
         _balance = 100;
@@ -43,7 +45,15 @@ public class Player
         _score += _hand[^1].Value;
     }
 
+    public void Reset()
+    {
+        _hand.Clear();
+        _score = 0;
+    }
+
     // properties
+    public Guid Id => _id;
+
     public int Score => _score;
 
     public bool IsBusted => _score > 21;
@@ -61,6 +71,6 @@ public class Player
     public int Balance
     {
         get => _balance;
-        set => _balance = value;
+        set => _balance = value > 0 ? value : _balance;
     }
 }

@@ -7,6 +7,8 @@ public class Game
     private Player _player;
     private readonly Dealer _dealer;
     private readonly Database _database;
+    private bool _isGameOver;
+    private int _wage;
 
     // constructors
     public Game()
@@ -17,13 +19,6 @@ public class Game
     }
 
     // methods
-    private void AddPlayer()
-    {
-        Console.Write("Please enter your name: ");
-        string playerName = Console.ReadLine()!;
-        _player = new Player(playerName);
-    }
-
     private void ShowRules()
     {
         Console.WriteLine("=== [Rules] ===");
@@ -57,8 +52,15 @@ public class Game
         Console.WriteLine("Good luck and have fun!");
     }
 
+    private void ResetBeforeRound()
+    {
+        _player.Reset();
+        _dealer.Reset();
+    }
+
     private void DealCards()
     {
+        ResetBeforeRound();
         DealCardsPerRound();
         DealCardsPerRound();
     }
@@ -71,7 +73,9 @@ public class Game
 
     private void DisplayPlayerHand(Player player)
     {
-        Console.WriteLine($"{player.Name}, you have the following cards");
+        Console.WriteLine(
+            $"{player.Name} (balance: {player.Balance}, wage: {_wage}), you have the following cards"
+        );
         Console.WriteLine($"{string.Join(", ", player.Hand)}");
         Console.WriteLine($"Your score is: {player.Score}");
         Console.WriteLine();
@@ -105,19 +109,34 @@ public class Game
 
     private void DeterminateWinner()
     {
+        int prize = _wage * 2;
+        int blackjackPrize = (int)Math.Round(_wage * 2.5);
+
         Console.WriteLine($"\nYour score: {_player.Score}");
         Console.WriteLine($"Dealer score: {_dealer.Score}");
+        Console.WriteLine();
 
         if (_player.IsBusted)
         {
-            Console.WriteLine("You are busted! You lost!");
+            Console.WriteLine($"You are busted! You lost {_wage} tokens!");
+            _player.Balance -= _wage;
+            _database.EditPlayer(_player);
             return;
         }
 
         if (_dealer.IsBusted)
         {
-            Console.WriteLine("The dealer is busted! You won!");
+            Console.WriteLine($"The dealer is busted! You won {prize} tokens!");
+            _player.Balance += _wage;
+            _database.EditPlayer(_player);
             return;
+        }
+
+        if (_player.HasBlackjack)
+        {
+            Console.WriteLine($"You got blackjack! You won {blackjackPrize} tokens!");
+            _player.Balance += (int)Math.Round(_wage * 1.5);
+            _database.EditPlayer(_player);
         }
 
         if (_player.Score == _dealer.Score)
@@ -126,15 +145,25 @@ public class Game
             return;
         }
 
-        Console.WriteLine(_player.Score > _dealer.Score ? "You won!" : "You lost!");
+        if (_player.Score > _dealer.Score)
+        {
+            Console.WriteLine($"You won {prize} tokens!");
+            _player.Balance += _wage;
+            _database.EditPlayer(_player);
+        }
+        else
+        {
+            Console.WriteLine($"You lost {_wage} tokens!");
+            _player.Balance -= _wage;
+            _database.EditPlayer(_player);
+        }
     }
 
     private void PlayerTurn()
     {
-        Console.ReadLine();
-
         if (_player.HasBlackjack)
         {
+            DisplayPlayerHand(_player);
             Console.WriteLine("You got blackjack!");
             return;
         }
@@ -148,6 +177,8 @@ public class Game
 
             Console.Write("Would you like to hit or stand? [h / s]: ");
             choice = Console.ReadKey().KeyChar;
+
+            Console.WriteLine();
 
             if (choice == 's')
                 break;
@@ -223,7 +254,7 @@ public class Game
                         Console.WriteLine("Players stored locally");
                         foreach (Player player in _database.Players)
                         {
-                            Console.WriteLine($"{player.Name}");
+                            Console.WriteLine($"- {player.Name}");
                         }
 
                         break;
@@ -314,30 +345,114 @@ public class Game
                 break;
             }
 
+            case 3:
+            {
+                if (!_database.HasPlayers)
+                {
+                    Console.WriteLine("There are no users created to play with.");
+                    break;
+                }
+
+                Startgame();
+                break;
+            }
+
             case 5:
             {
                 return;
             }
         }
 
-        Console.ReadLine();
+        if (!_isGameOver)
+            Console.ReadLine();
+
         InitMenu();
+    }
+
+    private void Startgame()
+    {
+        Menu selectPlayerMenu = new Menu("Select player");
+        List<MenuItem> selectPlayerItems = new List<MenuItem>();
+
+        List<Player> posBalancePlayers = _database
+            .Players.Where(player => player.Balance > 0)
+            .ToList();
+
+        for (int i = 0; i < posBalancePlayers.Count; i++)
+        {
+            selectPlayerItems.Add(
+                new MenuItem(
+                    i,
+                    $"{posBalancePlayers[i].Name} (balance: {posBalancePlayers[i].Balance})"
+                )
+            );
+        }
+
+        selectPlayerMenu.SetItems(selectPlayerItems);
+        int selectPlayerChoice = selectPlayerMenu.GetChoosenItem();
+
+        _player = _database.Players.First(player =>
+            player == posBalancePlayers[selectPlayerChoice]
+        );
+
+        _isGameOver = false;
+
+        while (!_isGameOver && _player.Balance > 0)
+        {
+            _wage = 0;
+            int tmpWage;
+
+            do
+            {
+                Console.Clear();
+                Console.WriteLine($"Your balance: {_player.Balance}");
+                Console.Write($"Enter wage: ");
+                tmpWage = int.Parse(Console.ReadLine()!);
+
+                if (tmpWage > 0 && tmpWage <= _player.Balance)
+                    break;
+
+                Console.WriteLine("Wrong wage! Try again!");
+                Console.ReadLine();
+                Console.Clear();
+            } while (tmpWage <= 0 || tmpWage > _player.Balance);
+
+            _wage = tmpWage;
+
+            DealCards();
+            PlayerTurn();
+
+            if (!_player.IsBusted)
+                DealerTurn();
+
+            DeterminateWinner();
+
+            char nextRoundChoice;
+
+            do
+            {
+                Console.Write("\nWould you like to play another round? [y/n] ");
+                nextRoundChoice = Console.ReadKey().KeyChar;
+
+                if (nextRoundChoice != 'n' && nextRoundChoice != 'y')
+                {
+                    Console.WriteLine("Wrong input! Try again!");
+                    continue;
+                }
+
+                Console.WriteLine();
+
+                if (nextRoundChoice == 'n')
+                {
+                    _isGameOver = true;
+                    break;
+                }
+            } while (nextRoundChoice != 'y');
+        }
     }
 
     public void Run()
     {
         InitMenu();
-
-        // AddPlayer();
-        // ShowRules();
-        // DealCards();
-        // PlayerTurn();
-        //
-        // if (!_player.IsBusted)
-        //     DealerTurn();
-        //
-        // DeterminateWinner();
-        //
-        // Console.ReadLine();
     }
 }
