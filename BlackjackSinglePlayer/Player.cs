@@ -8,12 +8,14 @@ public class Player
     private readonly string _name;
     private readonly List<Card> _hand;
     private int _score;
+    private int _balance;
 
     // constructors
     public Player(string name)
     {
         _name = name;
         _hand = new List<Card>();
+        _balance = 100;
     }
 
     // methods
@@ -51,4 +53,6 @@ public class Player
     public string Name => _name;
 
     public List<Card> Hand => _hand;
+
+    public int Balance => _balance;
 }

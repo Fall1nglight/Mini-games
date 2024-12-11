@@ -1,4 +1,6 @@
-﻿namespace BlackjackSinglePlayer;
+﻿using System.Text.Json;
+
+namespace BlackjackSinglePlayer;
 
 public class Game
 {
@@ -6,12 +8,14 @@ public class Game
     private readonly Deck _deck;
     private Player _player;
     private readonly Dealer _dealer;
+    private readonly Database _database;
 
     // constructors
     public Game()
     {
         _deck = new Deck();
         _dealer = new Dealer();
+        _database = new Database("db.json");
     }
 
     // methods
@@ -213,7 +217,17 @@ public class Game
                     // view players
                     case 1:
                     {
+                        if (!_database.HasPlayers)
+                        {
+                            Console.WriteLine("There are no players stored locally.");
+                            break;
+                        }
+
                         Console.WriteLine("Players stored locally");
+                        foreach (Player player in _database.Players)
+                        {
+                            Console.WriteLine($"{player.Name}");
+                        }
 
                         break;
                     }
@@ -223,7 +237,20 @@ public class Game
                     {
                         Console.Write("Please enter your username: ");
                         string username = Console.ReadLine()!;
+                        Player playerToAdd = new Player(username);
+                        _database.AddPlayer(playerToAdd);
+                        break;
+                    }
 
+                    // edit player
+                    case 3:
+                    {
+                        break;
+                    }
+
+                    // delete player
+                    case 4:
+                    {
                         break;
                     }
                 }
