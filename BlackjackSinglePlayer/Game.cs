@@ -137,6 +137,7 @@ public class Game
             Console.WriteLine($"You got blackjack! You won {blackjackPrize} tokens!");
             _player.Balance += (int)Math.Round(_wage * 1.5);
             _database.EditPlayer(_player);
+            return;
         }
 
         if (_player.Score == _dealer.Score)
@@ -221,6 +222,7 @@ public class Game
             case 1:
             {
                 ShowRules();
+                Console.ReadLine();
                 break;
             }
 
@@ -342,6 +344,7 @@ public class Game
                     }
                 }
                 // playerMenuSwitch
+                Console.ReadLine();
                 break;
             }
 
@@ -353,7 +356,13 @@ public class Game
                     break;
                 }
 
+                _isGameOver = false;
                 Startgame();
+
+                if (!_isGameOver)
+                {
+                    Console.ReadLine();
+                }
                 break;
             }
 
@@ -362,9 +371,6 @@ public class Game
                 return;
             }
         }
-
-        if (!_isGameOver)
-            Console.ReadLine();
 
         InitMenu();
     }
@@ -377,6 +383,12 @@ public class Game
         List<Player> posBalancePlayers = _database
             .Players.Where(player => player.Balance > 0)
             .ToList();
+
+        if (posBalancePlayers.Count == 0)
+        {
+            _isGameOver = true;
+            return;
+        }
 
         for (int i = 0; i < posBalancePlayers.Count; i++)
         {
@@ -394,8 +406,6 @@ public class Game
         _player = _database.Players.First(player =>
             player == posBalancePlayers[selectPlayerChoice]
         );
-
-        _isGameOver = false;
 
         while (!_isGameOver && _player.Balance > 0)
         {
@@ -426,6 +436,11 @@ public class Game
                 DealerTurn();
 
             DeterminateWinner();
+
+            if (_player.Balance <= 0)
+            {
+                return;
+            }
 
             char nextRoundChoice;
 
