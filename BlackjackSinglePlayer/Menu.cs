@@ -4,7 +4,7 @@ public class Menu
 {
     // fields
     private readonly string _label;
-    private readonly List<MenuItem> _items;
+    private List<MenuItem> _items;
 
     // constructors
     public Menu(string label)
@@ -51,13 +51,6 @@ public class Menu
 
     public void SetItems(List<MenuItem> items)
     {
-        _items.AddRange(items);
+        _items = items;
     }
-
-    public MenuItem GetItemById(int id)
-    {
-        return _items.First(item => item.Id == id);
-    }
-
-    // properties
 }

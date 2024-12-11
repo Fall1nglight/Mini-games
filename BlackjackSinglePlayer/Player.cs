@@ -71,6 +71,6 @@ public class Player
     public int Balance
     {
         get => _balance;
-        set => _balance = value;
+        set => _balance = value < 0 ? _balance : value;
     }
 }

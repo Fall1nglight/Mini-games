@@ -9,6 +9,11 @@ public class Game
     private readonly Database _database;
     private bool _isGameOver;
     private int _wage;
+    private Menu _mainMenu;
+    private Menu _playerSectionMenu;
+    private PlayerMenu _playerMenu;
+    private List<MenuItem> _playerSectionMenuLimited;
+    private List<MenuItem> _playerSectionMenuAll;
 
     // constructors
     public Game()
@@ -16,6 +21,20 @@ public class Game
         _deck = new Deck();
         _dealer = new Dealer();
         _database = new Database("db.json");
+        _mainMenu = CreateMainMenu();
+        _playerSectionMenu = CreatePlayerMenu();
+
+        _playerSectionMenuLimited = new List<MenuItem> { new MenuItem(2, "Add player") };
+
+        _playerSectionMenuAll = new List<MenuItem>
+        {
+            new MenuItem(1, "View players"),
+            new MenuItem(2, "Add player"),
+            new MenuItem(3, "Edit player"),
+            new MenuItem(4, "Delete player"),
+        };
+
+        _playerMenu = new PlayerMenu();
     }
 
     // methods
@@ -54,13 +73,13 @@ public class Game
 
     private void ResetBeforeRound()
     {
+        _wage = 0;
         _player.Reset();
         _dealer.Reset();
     }
 
     private void DealCards()
     {
-        ResetBeforeRound();
         DealCardsPerRound();
         DealCardsPerRound();
     }
@@ -93,10 +112,10 @@ public class Game
         Console.WriteLine();
         Console.Write("Now the dealer draws");
 
-        for (int i = 0; i < 10; i++)
+        for (int i = 0; i < 5; i++)
         {
             Console.Write('.');
-            Thread.Sleep(300);
+            Thread.Sleep(350);
         }
 
         while (_dealer.Score < 17)
@@ -109,9 +128,6 @@ public class Game
 
     private void DeterminateWinner()
     {
-        int prize = _wage * 2;
-        int blackjackPrize = (int)Math.Round(_wage * 2.5);
-
         Console.WriteLine($"\nYour score: {_player.Score}");
         Console.WriteLine($"Dealer score: {_dealer.Score}");
         Console.WriteLine();
@@ -119,24 +135,21 @@ public class Game
         if (_player.IsBusted)
         {
             Console.WriteLine($"You are busted! You lost {_wage} tokens!");
-            _player.Balance -= _wage;
-            _database.EditPlayer(_player);
+            UpdatePlayerBalance(-_wage);
             return;
         }
 
         if (_dealer.IsBusted)
         {
-            Console.WriteLine($"The dealer is busted! You won {prize} tokens!");
-            _player.Balance += _wage;
-            _database.EditPlayer(_player);
+            Console.WriteLine($"The dealer is busted! You won {_wage * 2} tokens!");
+            UpdatePlayerBalance(_wage);
             return;
         }
 
         if (_player.HasBlackjack)
         {
-            Console.WriteLine($"You got blackjack! You won {blackjackPrize} tokens!");
-            _player.Balance += (int)Math.Round(_wage * 1.5);
-            _database.EditPlayer(_player);
+            Console.WriteLine($"You got blackjack! You won {(int)Math.Round(_wage * 2.5)} tokens!");
+            UpdatePlayerBalance((int)Math.Round(_wage * 1.5));
             return;
         }
 
@@ -148,16 +161,20 @@ public class Game
 
         if (_player.Score > _dealer.Score)
         {
-            Console.WriteLine($"You won {prize} tokens!");
-            _player.Balance += _wage;
-            _database.EditPlayer(_player);
+            Console.WriteLine($"You won {_wage * 2} tokens!");
+            UpdatePlayerBalance(_wage);
         }
         else
         {
             Console.WriteLine($"You lost {_wage} tokens!");
-            _player.Balance -= _wage;
-            _database.EditPlayer(_player);
+            UpdatePlayerBalance(-_wage);
         }
+    }
+
+    private void UpdatePlayerBalance(int amount)
+    {
+        _player.Balance += amount;
+        _database.EditPlayer(_player);
     }
 
     private void PlayerTurn()
@@ -169,265 +186,44 @@ public class Game
             return;
         }
 
-        char choice;
         do
         {
             Console.Clear();
             DisplayPlayerHand(_player);
             DisplayDealerHand();
 
-            Console.Write("Would you like to hit or stand? [h / s]: ");
-            choice = Console.ReadKey().KeyChar;
-
-            Console.WriteLine();
+            char choice = GetPlayerHitOrStandChoice();
 
             if (choice == 's')
                 break;
 
-            if (choice != 'h')
+            if (choice == 'h')
             {
-                Console.WriteLine("You have entered wrong input! Try again!");
-                continue;
+                _player.DrawCard(_deck);
+                Console.WriteLine($"\nYou have drawn the following card: {_player.Hand[^1]}");
+                Thread.Sleep(1500); // Pause after drawing a card
             }
-
-            _player.DrawCard(_deck);
-
-            Console.WriteLine($"\n\nYou have drawn the following card: {_player.Hand[^1]}");
-
-            Thread.Sleep(1500);
-        } while (choice != 's' && !_player.IsBusted);
+            else
+            {
+                Console.WriteLine("Invalid input! Try again!");
+            }
+        } while (!_player.IsBusted);
     }
 
-    private void InitMenu()
+    private char GetPlayerHitOrStandChoice()
     {
-        // todo: nested menus should only return to the previus menu
-        Menu mainMenu = new Menu("Main Menu");
-        MenuItem rulesItem = new MenuItem(1, "Show rules");
-        MenuItem playersItem = new MenuItem(2, "Player actions (view/add/edit/remove)");
-        MenuItem startItem = new MenuItem(3, "Start game");
-        MenuItem statisticsItem = new MenuItem(4, "Show statistics");
-        MenuItem exitItem = new MenuItem(5, "Quit");
-
-        mainMenu.SetItems(
-            new List<MenuItem>() { rulesItem, playersItem, startItem, statisticsItem, exitItem }
-        );
-
-        int choice = mainMenu.GetChoosenItem();
-
-        if (choice != 5)
-            Console.Clear();
-
-        switch (choice)
-        {
-            case 1:
-            {
-                ShowRules();
-                Console.ReadLine();
-                break;
-            }
-
-            case 2:
-            {
-                Menu playerMenu = new Menu("Player menu");
-                MenuItem addPlayerItem = new MenuItem(2, "Add player");
-                List<MenuItem> playerMenuItems = new List<MenuItem>() { addPlayerItem };
-
-                if (_database.HasPlayers)
-                {
-                    MenuItem viewPlayerItem = new MenuItem(1, "View players");
-                    MenuItem editPlayer = new MenuItem(3, "Edit player");
-                    MenuItem deletePlayer = new MenuItem(4, "Delete player");
-                    playerMenuItems.Add(viewPlayerItem);
-                    playerMenuItems.Add(editPlayer);
-                    playerMenuItems.Add(deletePlayer);
-                }
-
-                playerMenu.SetItems(playerMenuItems);
-                int playerMenuChoice = playerMenu.GetChoosenItem();
-
-                Console.WriteLine();
-
-                // playerMenuSwitch
-                switch (playerMenuChoice)
-                {
-                    // view players
-                    case 1:
-                    {
-                        Console.WriteLine("Players stored locally");
-                        foreach (Player player in _database.Players)
-                        {
-                            Console.WriteLine($"- {player.Name}");
-                        }
-
-                        break;
-                    }
-
-                    // add players
-                    case 2:
-                    {
-                        Console.Write("Please enter your username: ");
-                        string username = Console.ReadLine()!;
-                        Player playerToAdd = new Player(username);
-                        _database.AddPlayer(playerToAdd);
-                        break;
-                    }
-
-                    // edit player
-                    case 3:
-                    {
-                        Menu editPlayerMenu = new Menu("Edit Player");
-                        List<MenuItem> editPlayerItems = new List<MenuItem>();
-
-                        for (var i = 0; i < _database.Players.Count; i++)
-                        {
-                            editPlayerItems.Add(new MenuItem(i, $"{_database.Players[i].Name}"));
-                        }
-
-                        editPlayerMenu.SetItems(editPlayerItems);
-                        int editPlayerChoice = editPlayerMenu.GetChoosenItem();
-
-                        Player playerToEdit = _database.Players[editPlayerChoice];
-
-                        Menu editPlayerDetailsMenu = new Menu(playerToEdit.Name);
-                        MenuItem nameItem = new MenuItem(1, "Change name");
-                        MenuItem balanceItem = new MenuItem(
-                            2,
-                            $"Balance (current: {playerToEdit.Balance})"
-                        );
-
-                        editPlayerDetailsMenu.SetItems(
-                            new List<MenuItem>() { nameItem, balanceItem }
-                        );
-
-                        int editPlayerDetailsChoice = editPlayerDetailsMenu.GetChoosenItem();
-
-                        switch (editPlayerDetailsChoice)
-                        {
-                            case 1:
-                            {
-                                Console.Write("Enter a new username: ");
-                                string newUsername = Console.ReadLine()!;
-                                playerToEdit.Name = newUsername;
-                                break;
-                            }
-
-                            case 2:
-                            {
-                                Console.Write("Enter new balance: ");
-                                int newBalance = int.Parse(Console.ReadLine()!);
-                                playerToEdit.Balance = newBalance;
-                                break;
-                            }
-                        }
-
-                        _database.EditPlayer(editPlayerChoice, playerToEdit);
-
-                        break;
-                    }
-
-                    // delete player
-                    case 4:
-                    {
-                        Menu deletePlayerMenu = new Menu("Delete player");
-                        List<MenuItem> deletePlayerItems = new List<MenuItem>();
-
-                        for (var i = 0; i < _database.Players.Count; i++)
-                        {
-                            deletePlayerItems.Add(new MenuItem(i, _database.Players[i].Name));
-                        }
-
-                        deletePlayerMenu.SetItems(deletePlayerItems);
-                        int deletePlayerChoice = deletePlayerMenu.GetChoosenItem();
-                        _database.RemovePlayer(deletePlayerChoice);
-
-                        break;
-                    }
-                }
-                // playerMenuSwitch
-                Console.ReadLine();
-                break;
-            }
-
-            case 3:
-            {
-                if (!_database.HasPlayers)
-                {
-                    Console.WriteLine("There are no users created to play with.");
-                    break;
-                }
-
-                _isGameOver = false;
-                Startgame();
-
-                if (!_isGameOver)
-                {
-                    Console.ReadLine();
-                }
-                break;
-            }
-
-            case 5:
-            {
-                return;
-            }
-        }
-
-        InitMenu();
+        Console.Write("Would you like to hit or stand? [h / s]: ");
+        char choice = Console.ReadKey().KeyChar;
+        Console.WriteLine();
+        return choice;
     }
 
-    private void Startgame()
+    private void PlayRound()
     {
-        Menu selectPlayerMenu = new Menu("Select player");
-        List<MenuItem> selectPlayerItems = new List<MenuItem>();
-
-        List<Player> posBalancePlayers = _database
-            .Players.Where(player => player.Balance > 0)
-            .ToList();
-
-        if (posBalancePlayers.Count == 0)
-        {
-            _isGameOver = true;
-            return;
-        }
-
-        for (int i = 0; i < posBalancePlayers.Count; i++)
-        {
-            selectPlayerItems.Add(
-                new MenuItem(
-                    i,
-                    $"{posBalancePlayers[i].Name} (balance: {posBalancePlayers[i].Balance})"
-                )
-            );
-        }
-
-        selectPlayerMenu.SetItems(selectPlayerItems);
-        int selectPlayerChoice = selectPlayerMenu.GetChoosenItem();
-
-        _player = _database.Players.First(player =>
-            player == posBalancePlayers[selectPlayerChoice]
-        );
-
         while (!_isGameOver && _player.Balance > 0)
         {
-            _wage = 0;
-            int tmpWage;
-
-            do
-            {
-                Console.Clear();
-                Console.WriteLine($"Your balance: {_player.Balance}");
-                Console.Write($"Enter wage: ");
-                tmpWage = int.Parse(Console.ReadLine()!);
-
-                if (tmpWage > 0 && tmpWage <= _player.Balance)
-                    break;
-
-                Console.WriteLine("Wrong wage! Try again!");
-                Console.ReadLine();
-                Console.Clear();
-            } while (tmpWage <= 0 || tmpWage > _player.Balance);
-
-            _wage = tmpWage;
+            ResetBeforeRound();
+            _wage = GetWageFromPlayer();
 
             DealCards();
             PlayerTurn();
@@ -438,32 +234,243 @@ public class Game
             DeterminateWinner();
 
             if (_player.Balance <= 0)
-            {
                 return;
-            }
 
-            char nextRoundChoice;
-
-            do
-            {
-                Console.Write("\nWould you like to play another round? [y/n] ");
-                nextRoundChoice = Console.ReadKey().KeyChar;
-
-                if (nextRoundChoice != 'n' && nextRoundChoice != 'y')
-                {
-                    Console.WriteLine("Wrong input! Try again!");
-                    continue;
-                }
-
-                Console.WriteLine();
-
-                if (nextRoundChoice == 'n')
-                {
-                    _isGameOver = true;
-                    break;
-                }
-            } while (nextRoundChoice != 'y');
+            if (!AskToPlayAnotherRound())
+                _isGameOver = true;
         }
+    }
+
+    private void InitMenu()
+    {
+        int choice = _mainMenu.GetChoosenItem();
+
+        if (choice == 5)
+            return;
+
+        Console.Clear();
+
+        switch (choice)
+        {
+            case 1:
+                ShowRules();
+                Console.ReadLine();
+                break;
+
+            case 2:
+                HandlePlayerMenu();
+                break;
+
+            case 3:
+                HandleStartGame();
+                break;
+
+            case 4:
+                ShowStatistics();
+                break;
+        }
+
+        InitMenu(); // Recursively call InitMenu
+    }
+
+    private Menu CreateMainMenu()
+    {
+        Menu mainMenu = new Menu("Main Menu");
+        mainMenu.SetItems(
+            new List<MenuItem>
+            {
+                new MenuItem(1, "Show rules"),
+                new MenuItem(2, "Player actions (view/add/edit/remove)"),
+                new MenuItem(3, "Start game"),
+                new MenuItem(4, "Show statistics"),
+                new MenuItem(5, "Quit"),
+            }
+        );
+        return mainMenu;
+    }
+
+    private void HandlePlayerMenu()
+    {
+        _playerSectionMenu.SetItems(
+            !_database.HasPlayers ? _playerSectionMenuLimited : _playerSectionMenuAll
+        );
+
+        int playerMenuChoice = _playerSectionMenu.GetChoosenItem();
+
+        Console.WriteLine();
+
+        switch (playerMenuChoice)
+        {
+            case 1:
+                ViewPlayers();
+                break;
+
+            case 2:
+                AddPlayer();
+                break;
+
+            case 3:
+                EditPlayer();
+                break;
+
+            case 4:
+                DeletePlayer();
+                break;
+        }
+
+        Console.ReadLine();
+    }
+
+    private Menu CreatePlayerMenu()
+    {
+        Menu playerMenu = new Menu("Player menu");
+        List<MenuItem> playerMenuItems = new List<MenuItem>
+        {
+            new MenuItem(1, "View players"),
+            new MenuItem(2, "Add player"),
+            new MenuItem(3, "Edit player"),
+            new MenuItem(4, "Delete player"),
+        };
+
+        playerMenu.SetItems(playerMenuItems);
+        return playerMenu;
+    }
+
+    private void ViewPlayers()
+    {
+        Console.WriteLine("Players stored locally");
+        foreach (Player player in _database.Players)
+        {
+            Console.WriteLine($"- {player.Name}, balance: {player.Balance}");
+        }
+    }
+
+    private void AddPlayer()
+    {
+        Console.Write("Please enter your username: ");
+        string username = Console.ReadLine()!;
+        Player playerToAdd = new Player(username);
+        _database.AddPlayer(playerToAdd);
+    }
+
+    private void EditPlayer()
+    {
+        _playerMenu.Label = "Edit Player";
+        _playerMenu.SetPlayers(_database.Players);
+
+        Player playerToEdit = _playerMenu.GetChoosenPlayer();
+
+        Menu editPlayerDetailsMenu = new Menu(playerToEdit.Name);
+        editPlayerDetailsMenu.SetItems(
+            new List<MenuItem>
+            {
+                new MenuItem(1, "Change name"),
+                new MenuItem(2, $"Change balance (current: {playerToEdit.Balance})"),
+            }
+        );
+
+        int editPlayerDetailsChoice = editPlayerDetailsMenu.GetChoosenItem();
+        switch (editPlayerDetailsChoice)
+        {
+            case 1:
+                Console.Write("Enter a new username: ");
+                playerToEdit.Name = Console.ReadLine()!;
+                break;
+
+            case 2:
+                Console.Write("Enter new balance: ");
+                playerToEdit.Balance = int.Parse(Console.ReadLine()!);
+                break;
+        }
+
+        _database.EditPlayer(playerToEdit);
+    }
+
+    private void DeletePlayer()
+    {
+        _playerMenu.Label = "Delete player";
+        _playerMenu.SetPlayers(_database.Players);
+        _database.RemovePlayer(_playerMenu.GetChoosenPlayer());
+    }
+
+    private void HandleStartGame()
+    {
+        if (!_database.HasPlayers)
+        {
+            Console.WriteLine("There are no users created to play with.");
+            return;
+        }
+
+        _isGameOver = false;
+        Startgame();
+
+        if (!_isGameOver)
+            Console.ReadLine();
+    }
+
+    private void ShowStatistics()
+    {
+        // Implement the statistics logic here
+    }
+
+    private int GetWageFromPlayer()
+    {
+        int tmpWage;
+        do
+        {
+            Console.Clear();
+            Console.WriteLine($"Your balance: {_player.Balance}");
+            Console.Write("Enter wage: ");
+
+            if (
+                !int.TryParse(Console.ReadLine(), out tmpWage)
+                || tmpWage <= 0
+                || tmpWage > _player.Balance
+            )
+            {
+                Console.WriteLine("Wrong wage! Try again!");
+                Console.ReadLine();
+            }
+        } while (tmpWage <= 0 || tmpWage > _player.Balance);
+
+        return tmpWage;
+    }
+
+    private bool AskToPlayAnotherRound()
+    {
+        do
+        {
+            Console.Write("\nWould you like to play another round? [y/n] ");
+            char nextRoundChoice = Console.ReadKey().KeyChar;
+            Console.WriteLine();
+
+            if (nextRoundChoice == 'n')
+                return false;
+
+            if (nextRoundChoice == 'y')
+                return true;
+
+            Console.WriteLine("Wrong input! Try again!");
+        } while (true);
+    }
+
+    private void Startgame()
+    {
+        List<Player> posBalancePlayers = _database
+            .Players.Where(player => player.Balance > 0)
+            .ToList();
+
+        if (posBalancePlayers.Count == 0)
+        {
+            _isGameOver = true;
+            return;
+        }
+
+        _playerMenu.Label = "Select Player";
+        _playerMenu.SetPlayers(posBalancePlayers);
+        _player = _playerMenu.GetChoosenPlayer();
+
+        PlayRound();
     }
 
     public void Run()

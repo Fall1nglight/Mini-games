@@ -18,6 +18,7 @@ public class Database
         Init();
     }
 
+    // methods
     private void Init()
     {
         // todo : should check if the json file is formatted correctly
@@ -38,27 +39,16 @@ public class Database
         File.WriteAllText(_path, jsonString);
     }
 
-    // methods
+    public Player GetPlayerByGuid(Guid id)
+    {
+        return _storedPlayers.First(player => player.Id == id);
+    }
+
     public void AddPlayer(Player player)
     {
         _storedPlayers.Add(player);
         SyncToJson();
-        Console.WriteLine($"{_storedPlayers[^1].Name} has been added to the database.");
-    }
-
-    public void RemovePlayer(int playerId)
-    {
-        Player toRemove = _storedPlayers[playerId];
-        _storedPlayers.RemoveAt(playerId);
-        SyncToJson();
-        Console.WriteLine($"{toRemove.Name} has been removed from the database.");
-    }
-
-    public void EditPlayer(int playerId, Player player)
-    {
-        _storedPlayers[playerId] = player;
-        SyncToJson();
-        Console.WriteLine($"Player with id: {playerId} has been edited.");
+        Console.WriteLine($"{player.Name} has been added to the database.");
     }
 
     public void EditPlayer(Player player)
@@ -69,7 +59,15 @@ public class Database
             idx++;
 
         _storedPlayers[idx] = player;
+
         SyncToJson();
+    }
+
+    public void RemovePlayer(Player player)
+    {
+        _storedPlayers.Remove(player);
+        SyncToJson();
+        Console.WriteLine($"{player.Name} has been removed from the database.");
     }
 
     private void SyncToJson()
