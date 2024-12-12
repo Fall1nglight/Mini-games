@@ -1,4 +1,6 @@
-﻿namespace BlackjackSinglePlayer;
+﻿using BlackjackSinglePlayer.Enums;
+
+namespace BlackjackSinglePlayer;
 
 public class Game
 {
@@ -135,45 +137,47 @@ public class Game
         if (_player.IsBusted)
         {
             Console.WriteLine($"You are busted! You lost {_wage} tokens!");
-            UpdatePlayerBalance(-_wage);
+            UpdatePlayer(GameOutcome.Lose, -_wage);
             return;
         }
 
         if (_dealer.IsBusted)
         {
             Console.WriteLine($"The dealer is busted! You won {_wage * 2} tokens!");
-            UpdatePlayerBalance(_wage);
+            UpdatePlayer(GameOutcome.Win, _wage);
             return;
         }
 
         if (_player.HasBlackjack)
         {
             Console.WriteLine($"You got blackjack! You won {(int)Math.Round(_wage * 2.5)} tokens!");
-            UpdatePlayerBalance((int)Math.Round(_wage * 1.5));
+            UpdatePlayer(GameOutcome.Win, (int)Math.Round(_wage * 1.5));
             return;
         }
 
         if (_player.Score == _dealer.Score)
         {
             Console.WriteLine("Both scores are equal. Push!");
+            UpdatePlayer(GameOutcome.Push, 0);
             return;
         }
 
         if (_player.Score > _dealer.Score)
         {
             Console.WriteLine($"You won {_wage * 2} tokens!");
-            UpdatePlayerBalance(_wage);
+            UpdatePlayer(GameOutcome.Win, _wage);
         }
         else
         {
             Console.WriteLine($"You lost {_wage} tokens!");
-            UpdatePlayerBalance(-_wage);
+            UpdatePlayer(GameOutcome.Lose, -_wage);
         }
     }
 
-    private void UpdatePlayerBalance(int amount)
+    private void UpdatePlayer(GameOutcome outcome, int amount)
     {
         _player.Balance += amount;
+        _player.Statistics.UpdateStats(outcome, Math.Abs(amount));
         _database.EditPlayer(_player);
     }
 
@@ -410,7 +414,21 @@ public class Game
 
     private void ShowStatistics()
     {
-        // Implement the statistics logic here
+        _playerMenu.Label = "Select player";
+        _playerMenu.SetPlayers(_database.Players);
+        Player tmpPlayer = _playerMenu.GetChoosenPlayer();
+
+        Console.WriteLine($"- Wins: {tmpPlayer.Statistics.PlayerWins}");
+        Console.WriteLine($"- Loses: {tmpPlayer.Statistics.PlayerLoses}");
+        Console.WriteLine($"- Pushes: {tmpPlayer.Statistics.NumOfPushes}");
+        Console.WriteLine($"- Biggest prize won: {tmpPlayer.Statistics.BiggestPrize}");
+        Console.WriteLine($"- Biggest bet lost: {tmpPlayer.Statistics.BiggestLoss}");
+        Console.WriteLine($"- Total prize won: {tmpPlayer.Statistics.TotalWon}");
+        Console.WriteLine($"- Total loss: {tmpPlayer.Statistics.TotalLoss}");
+        Console.WriteLine($"- Total waged: {tmpPlayer.Statistics.TotalWaged}");
+        Console.WriteLine($"- Rounds played: {tmpPlayer.Statistics.RoundsPlayed}");
+
+        Console.ReadLine();
     }
 
     private int GetWageFromPlayer()

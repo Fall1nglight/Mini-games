@@ -39,11 +39,6 @@ public class Database
         File.WriteAllText(_path, jsonString);
     }
 
-    public Player GetPlayerByGuid(Guid id)
-    {
-        return _storedPlayers.First(player => player.Id == id);
-    }
-
     public void AddPlayer(Player player)
     {
         _storedPlayers.Add(player);
@@ -70,7 +65,7 @@ public class Database
         Console.WriteLine($"{player.Name} has been removed from the database.");
     }
 
-    private void SyncToJson()
+    public void SyncToJson()
     {
         DatabaseRecord dbRecord = new DatabaseRecord(_storedPlayers);
         string jsonString = JsonSerializer.Serialize(dbRecord, _options);

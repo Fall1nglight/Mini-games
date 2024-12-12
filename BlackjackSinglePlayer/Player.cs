@@ -10,6 +10,7 @@ public class Player
     private readonly List<Card> _hand;
     private int _score;
     private int _balance;
+    private Statistics _stats;
 
     // constructors
     public Player(string name)
@@ -18,6 +19,7 @@ public class Player
         _name = name;
         _hand = new List<Card>();
         _balance = 100;
+        _stats = new Statistics();
     }
 
     // methods
@@ -72,5 +74,11 @@ public class Player
     {
         get => _balance;
         set => _balance = value < 0 ? _balance : value;
+    }
+
+    public Statistics Statistics
+    {
+        get => _stats;
+        set => _stats = value;
     }
 }
