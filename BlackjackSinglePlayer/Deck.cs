@@ -5,7 +5,7 @@ namespace BlackjackSinglePlayer;
 public class Deck
 {
     // fields
-    private List<Card> _cards;
+    private readonly List<Card> _cards;
     private readonly Random _rand;
 
     // constructors

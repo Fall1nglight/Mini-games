@@ -16,6 +16,11 @@ public class Statistics
     private int _roundsPlayed;
 
     // methods
+    /// <summary>
+    /// Updates stats depening on the outcome and waged amount
+    /// </summary>
+    /// <param name="outcome">Outcome of the round</param>
+    /// <param name="amount">Wage amount</param>
     public void UpdateStats(GameOutcome outcome, int amount)
     {
         if (outcome == GameOutcome.Win)

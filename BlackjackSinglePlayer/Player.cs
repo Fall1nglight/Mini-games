@@ -38,7 +38,8 @@ public class Player
     /// </summary>
     private void CalculateScore()
     {
-        if (_score >= 11 && _hand[^1].Rank == CardRank.Ace)
+        // ace must count as 1 if score is over 10
+        if (_score > 10 && _hand[^1].Rank == CardRank.Ace)
         {
             _score += 1;
             return;
@@ -47,6 +48,9 @@ public class Player
         _score += _hand[^1].Value;
     }
 
+    /// <summary>
+    /// Removes cards from players's hand and resets score to 0
+    /// </summary>
     public void Reset()
     {
         _hand.Clear();

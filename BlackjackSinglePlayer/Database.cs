@@ -6,8 +6,8 @@ public class Database
 {
     // fields
     private List<Player> _storedPlayers;
-    private string _path;
-    private JsonSerializerOptions _options;
+    private readonly string _path;
+    private readonly JsonSerializerOptions _options;
 
     // constructors
     public Database(string path)
@@ -19,10 +19,11 @@ public class Database
     }
 
     // methods
+    /// <summary>
+    /// Creates db file if does not exist, otherwise loads db content from file
+    /// </summary>
     private void Init()
     {
-        // todo : should check if the json file is formatted correctly
-
         if (File.Exists(_path))
         {
             LoadFromJson();
@@ -32,6 +33,9 @@ public class Database
         CreateDb();
     }
 
+    /// <summary>
+    /// Creates db file then writes players' data into it
+    /// </summary>
     private void CreateDb()
     {
         DatabaseRecord dbRecord = new DatabaseRecord(_storedPlayers);
@@ -39,6 +43,10 @@ public class Database
         File.WriteAllText(_path, jsonString);
     }
 
+    /// <summary>
+    /// Adds a player to the _storedPlayers List, then syncronizes the db file
+    /// </summary>
+    /// <param name="player">Player to be added</param>
     public void AddPlayer(Player player)
     {
         _storedPlayers.Add(player);
@@ -46,6 +54,10 @@ public class Database
         Console.WriteLine($"{player.Name} has been added to the database.");
     }
 
+    /// <summary>
+    /// Replace player with a new one in _storedPlayers List, then syncronizes the db file
+    /// </summary>
+    /// <param name="player">Player to be replaced</param>
     public void EditPlayer(Player player)
     {
         int idx = 0;
@@ -58,6 +70,10 @@ public class Database
         SyncToJson();
     }
 
+    /// <summary>
+    /// Removes a player from the _storedPlayers List, then syncronizes the db file
+    /// </summary>
+    /// <param name="player">Player to be removed</param>
     public void RemovePlayer(Player player)
     {
         _storedPlayers.Remove(player);
@@ -65,13 +81,19 @@ public class Database
         Console.WriteLine($"{player.Name} has been removed from the database.");
     }
 
-    public void SyncToJson()
+    /// <summary>
+    /// Syncronizes _storedPlayers List with the db file
+    /// </summary>
+    private void SyncToJson()
     {
         DatabaseRecord dbRecord = new DatabaseRecord(_storedPlayers);
         string jsonString = JsonSerializer.Serialize(dbRecord, _options);
         File.WriteAllText(_path, jsonString);
     }
 
+    /// <summary>
+    /// Loads players from the db file, then stores the result in _storedPlayers List
+    /// </summary>
     private void LoadFromJson()
     {
         string jsonString = File.ReadAllText(_path);
@@ -83,6 +105,7 @@ public class Database
         }
         catch (Exception e)
         {
+            // if the db file is corrupt replace with a new db file
             CreateDb();
         }
 

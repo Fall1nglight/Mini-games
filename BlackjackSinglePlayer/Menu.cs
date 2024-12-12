@@ -14,6 +14,10 @@ public class Menu
     }
 
     // methods
+    /// <summary>
+    /// Prompts the player to choose from the stored menu items
+    /// </summary>
+    /// <returns>The choosen items' id</returns>
     public int GetChoosenItem()
     {
         int choice = 0;
@@ -39,6 +43,9 @@ public class Menu
         return _items[choice].Id;
     }
 
+    /// <summary>
+    /// Display stored menu items
+    /// </summary>
     private void DisplayItems()
     {
         Console.WriteLine($"=== [{_label}] ===");
@@ -49,6 +56,10 @@ public class Menu
         }
     }
 
+    /// <summary>
+    /// Replaces the stored menu items with the given ones
+    /// </summary>
+    /// <param name="items">Menu items to be stored</param>
     public void SetItems(List<MenuItem> items)
     {
         _items = items;

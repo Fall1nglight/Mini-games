@@ -14,6 +14,10 @@ public class PlayerMenu
     }
 
     // methods
+    /// <summary>
+    /// Prompts the player to choose from the stored players (menu items)
+    /// </summary>
+    /// <returns>The choosen player</returns>
     public Player GetChoosenPlayer()
     {
         int choice = 0;
@@ -39,6 +43,9 @@ public class PlayerMenu
         return _players[choice];
     }
 
+    /// <summary>
+    /// Displays stored players as menu items
+    /// </summary>
     private void DisplayPlayers()
     {
         Console.WriteLine($"=== [{_label}] ===");
@@ -49,6 +56,10 @@ public class PlayerMenu
         }
     }
 
+    /// <summary>
+    /// Replaces stored players (as menu items) with the given ones
+    /// </summary>
+    /// <param name="players">Players to be stored (as menu items)</param>
     public void SetPlayers(List<Player> players)
     {
         _players = players;

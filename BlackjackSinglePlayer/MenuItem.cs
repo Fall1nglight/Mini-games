@@ -3,8 +3,8 @@
 public class MenuItem
 {
     // fields
-    private int _id;
-    private string _label;
+    private readonly int _id;
+    private readonly string _label;
 
     // constructors
     public MenuItem(int id, string label)
