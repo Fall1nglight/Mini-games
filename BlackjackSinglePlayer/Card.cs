@@ -7,6 +7,7 @@ public class Card
     // fields
     private readonly CardSuit _suit;
     private readonly CardRank _rank;
+    private readonly int _value;
     private readonly string _readableFormat;
 
     // constructors
@@ -14,6 +15,7 @@ public class Card
     {
         _suit = suit;
         _rank = rank;
+        _value = GetCardValue();
         _readableFormat = GetReadableFormat();
     }
 
@@ -24,7 +26,7 @@ public class Card
     /// <returns>The readable format</returns>
     private string GetReadableFormat()
     {
-        string rank = $"{(int)_rank}";
+        string rank = $"{(int)_rank + 2}";
 
         if (_rank is CardRank.Jack or CardRank.Queen or CardRank.King or CardRank.Ace)
         {
@@ -45,13 +47,27 @@ public class Card
         return $"{suit} {rank}";
     }
 
+    /// <summary>
+    /// Calculates card value based on its rank
+    /// </summary>
+    /// <returns>The calculated card value</returns>
+    private int GetCardValue()
+    {
+        return _rank switch
+        {
+            CardRank.Ace => 11,
+            CardRank.King or CardRank.Queen or CardRank.Jack => 10,
+            _ => (int)_rank + 2,
+        };
+    }
+
     public override string ToString()
     {
         return _readableFormat;
     }
 
     // properties
-    public int Value => (int)_rank;
+    public int Value => _value;
 
     public CardSuit Suit => _suit;
 
