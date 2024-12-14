@@ -3,8 +3,9 @@
 public class Menu
 {
     // fields
-    private readonly string _label;
+    private string _label;
     private List<MenuItem> _items;
+    private bool _isMainMenu;
 
     // constructors
     public Menu(string label)
@@ -34,13 +35,13 @@ public class Menu
             if (key == ConsoleKey.UpArrow && choice > 0)
                 choice--;
 
-            if (key == ConsoleKey.DownArrow && choice < _items.Count - 1)
+            if (key == ConsoleKey.DownArrow && choice < _items.Count)
                 choice++;
         } while (key != ConsoleKey.Enter);
 
         Console.SetCursorPosition(0, _items.Count + 1);
 
-        return _items[choice].Id;
+        return choice == _items.Count ? -1 : _items[choice].Id;
     }
 
     /// <summary>
@@ -54,6 +55,9 @@ public class Menu
         {
             Console.WriteLine($"[ ] {menuItem.Label}");
         }
+
+        if (!_isMainMenu)
+            Console.WriteLine("[ ] Back");
     }
 
     /// <summary>
@@ -63,5 +67,20 @@ public class Menu
     public void SetItems(List<MenuItem> items)
     {
         _items = items;
+    }
+
+    /// <summary>
+    /// Sets current menu as main
+    /// </summary>
+    public void SetAsMainMenu()
+    {
+        _isMainMenu = true;
+    }
+
+    // properties
+    public string Label
+    {
+        get => _label;
+        set => _label = value ?? throw new ArgumentNullException(nameof(value));
     }
 }

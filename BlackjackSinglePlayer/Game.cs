@@ -6,6 +6,7 @@ public class Game
 {
     // fields
     private readonly Menu _mainMenu;
+    private readonly Menu _editPlayerDetailsMenu;
     private readonly Menu _playerSectionMenu;
     private readonly PlayerMenu _playerMenu;
     private readonly List<MenuItem> _playerSectionMenuLimited;
@@ -24,6 +25,8 @@ public class Game
         _dealer = new Dealer();
         _database = new Database("db.json");
         _mainMenu = CreateMainMenu();
+        _editPlayerDetailsMenu = new Menu(string.Empty);
+
         _playerSectionMenu = CreatePlayerSectionMenu();
 
         _playerSectionMenuLimited = new List<MenuItem> { new MenuItem(2, "Add player") };
@@ -85,6 +88,7 @@ public class Game
     private Menu CreateMainMenu()
     {
         Menu mainMenu = new Menu("Main Menu");
+
         mainMenu.SetItems(
             new List<MenuItem>
             {
@@ -95,6 +99,9 @@ public class Game
                 new MenuItem(5, "Quit"),
             }
         );
+
+        mainMenu.SetAsMainMenu();
+
         return mainMenu;
     }
 
@@ -140,7 +147,7 @@ public class Game
     private void HandlePlayerSectionMenu()
     {
         _playerSectionMenu.SetItems(
-            !_database.HasPlayers ? _playerSectionMenuLimited : _playerSectionMenuAll
+            _database.HasPlayers ? _playerSectionMenuAll : _playerSectionMenuLimited
         );
 
         int playerMenuChoice = _playerSectionMenu.GetChoosenItem();
@@ -149,6 +156,11 @@ public class Game
 
         switch (playerMenuChoice)
         {
+            case -1:
+            {
+                break;
+            }
+
             case 1:
                 ViewPlayers();
                 break;
@@ -165,8 +177,6 @@ public class Game
                 DeletePlayer();
                 break;
         }
-
-        Console.ReadLine();
     }
 
     /// <summary>
@@ -198,6 +208,9 @@ public class Game
         {
             Console.WriteLine($"- {player.Name}, balance: {player.Balance}");
         }
+
+        Console.ReadLine();
+        HandlePlayerSectionMenu();
     }
 
     /// <summary>
@@ -209,6 +222,9 @@ public class Game
         string username = Console.ReadLine()!;
         Player playerToAdd = new Player(username);
         _database.AddPlayer(playerToAdd);
+
+        Console.ReadLine();
+        HandlePlayerSectionMenu();
     }
 
     /// <summary>
@@ -216,13 +232,19 @@ public class Game
     /// </summary>
     private void EditPlayer()
     {
-        _playerMenu.Label = "Edit Player";
+        _playerMenu.Label = "Select player";
         _playerMenu.SetPlayers(_database.Players);
 
-        Player playerToEdit = _playerMenu.GetChoosenPlayer();
+        Player? playerToEdit = _playerMenu.GetChoosenPlayer();
 
-        Menu editPlayerDetailsMenu = new Menu(playerToEdit.Name);
-        editPlayerDetailsMenu.SetItems(
+        if (playerToEdit == null)
+        {
+            HandlePlayerSectionMenu();
+            return;
+        }
+
+        _editPlayerDetailsMenu.Label = playerToEdit.Name;
+        _editPlayerDetailsMenu.SetItems(
             new List<MenuItem>
             {
                 new MenuItem(1, "Change name"),
@@ -230,9 +252,16 @@ public class Game
             }
         );
 
-        int editPlayerDetailsChoice = editPlayerDetailsMenu.GetChoosenItem();
+        int editPlayerDetailsChoice = _editPlayerDetailsMenu.GetChoosenItem();
+
         switch (editPlayerDetailsChoice)
         {
+            case -1:
+            {
+                EditPlayer();
+                return;
+            }
+
             case 1:
                 Console.Write("Enter a new username: ");
                 playerToEdit.Name = Console.ReadLine()!;
@@ -248,6 +277,8 @@ public class Game
         Console.WriteLine(
             $"{playerToEdit.Name} has been successfully edited. (id: {playerToEdit.Id})"
         );
+
+        Console.ReadLine();
     }
 
     /// <summary>
@@ -257,7 +288,16 @@ public class Game
     {
         _playerMenu.Label = "Delete player";
         _playerMenu.SetPlayers(_database.Players);
-        _database.RemovePlayer(_playerMenu.GetChoosenPlayer());
+        Player? playerToRemove = _playerMenu.GetChoosenPlayer();
+
+        if (playerToRemove == null)
+        {
+            HandlePlayerSectionMenu();
+            return;
+        }
+
+        _database.RemovePlayer(playerToRemove);
+        Console.ReadLine();
     }
 
     /// <summary>
@@ -285,7 +325,10 @@ public class Game
     {
         _playerMenu.Label = "Select player";
         _playerMenu.SetPlayers(_database.Players);
-        Player tmpPlayer = _playerMenu.GetChoosenPlayer();
+        Player? tmpPlayer = _playerMenu.GetChoosenPlayer();
+
+        if (tmpPlayer == null)
+            return;
 
         Console.WriteLine($"- Wins: {tmpPlayer.Statistics.PlayerWins}");
         Console.WriteLine($"- Loses: {tmpPlayer.Statistics.PlayerLoses}");
@@ -317,7 +360,15 @@ public class Game
 
         _playerMenu.Label = "Select Player";
         _playerMenu.SetPlayers(posBalancePlayers);
-        _player = _playerMenu.GetChoosenPlayer();
+        Player? selectedPlayer = _playerMenu.GetChoosenPlayer();
+
+        if (selectedPlayer == null)
+        {
+            _isGameOver = true;
+            return;
+        }
+
+        _player = selectedPlayer;
 
         PlayRound();
     }

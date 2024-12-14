@@ -18,7 +18,7 @@ public class PlayerMenu
     /// Prompts the player to choose from the stored players (menu items)
     /// </summary>
     /// <returns>The choosen player</returns>
-    public Player GetChoosenPlayer()
+    public Player? GetChoosenPlayer()
     {
         int choice = 0;
         ConsoleKey key;
@@ -34,13 +34,13 @@ public class PlayerMenu
             if (key == ConsoleKey.UpArrow && choice > 0)
                 choice--;
 
-            if (key == ConsoleKey.DownArrow && choice < _players.Count - 1)
+            if (key == ConsoleKey.DownArrow && choice < _players.Count)
                 choice++;
         } while (key != ConsoleKey.Enter);
 
         Console.SetCursorPosition(0, _players.Count + 1);
 
-        return _players[choice];
+        return choice == _players.Count ? null : _players[choice];
     }
 
     /// <summary>
@@ -54,6 +54,8 @@ public class PlayerMenu
         {
             Console.WriteLine($"[ ] {player.Name} (balance: {player.Balance})");
         }
+
+        Console.WriteLine("[ ] Back");
     }
 
     /// <summary>
