@@ -279,6 +279,7 @@ public class Game
         );
 
         Console.ReadLine();
+        HandlePlayerSectionMenu();
     }
 
     /// <summary>
@@ -298,6 +299,7 @@ public class Game
 
         _database.RemovePlayer(playerToRemove);
         Console.ReadLine();
+        HandlePlayerSectionMenu();
     }
 
     /// <summary>
@@ -530,6 +532,13 @@ public class Game
         Console.WriteLine($"Dealer score: {_dealer.Score}");
         Console.WriteLine();
 
+        if (_player.HasBlackjack)
+        {
+            Console.WriteLine($"You got blackjack! You won {(int)Math.Round(_wage * 2.5)} tokens!");
+            UpdatePlayer(GameOutcome.Win, (int)Math.Round(_wage * 1.5));
+            return;
+        }
+
         if (_player.IsBusted)
         {
             Console.WriteLine($"You are busted! You lost {_wage} tokens!");
@@ -541,13 +550,6 @@ public class Game
         {
             Console.WriteLine($"The dealer is busted! You won {_wage * 2} tokens!");
             UpdatePlayer(GameOutcome.Win, _wage);
-            return;
-        }
-
-        if (_player.HasBlackjack)
-        {
-            Console.WriteLine($"You got blackjack! You won {(int)Math.Round(_wage * 2.5)} tokens!");
-            UpdatePlayer(GameOutcome.Win, (int)Math.Round(_wage * 1.5));
             return;
         }
 
